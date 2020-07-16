@@ -354,15 +354,21 @@ std::vector<int> RR(std::map<char, process*> proc_map, std::vector<process*> pro
 	}
 	time++;
 	std::cout << "time " << time << "ms: Simulator ended for RR [Q <empty>]\n";
+	data[2] = total_cs;
+	data[3] = total_preemptions;	
 	return data;
 }
 
-//Prints stats to the required output file
-void print_stats(std::string alg, std::vector<int> data, FILE* out)
+//Takes in vector containing [average wait time time, average turnaround time, # of context switches, # of preemptions]
+//and prints it to the out FILE in the desired format
+void print_stats(char alg[], std::vector<int> data, FILE* out)
 {
-	/*
-		print shit
-	*/
+	double x = 0;
+	fprintf(out, "Algorithm  %s\n-- average CPU burst time : %.3f ms\n", alg, x);
+	fprintf(out, "-- average wait time: %.3f ms\n", x);
+	fprintf(out, "-- average turnaround time: %.3f ms\n", x);
+	fprintf(out, "-- total number of context switches: %d\n", data[2]);
+	fprintf(out, "-- total number of preemptions: %d\n", data[3]);
 }
 
 void start_sim(int n_procs, int seed, double lambda, int upper, int t_cs, double alpha, int t_slice, FILE* out, std::string rr_add)
@@ -402,16 +408,23 @@ void start_sim(int n_procs, int seed, double lambda, int upper, int t_cs, double
 	std::sort(procs.begin(), procs.end());	
 
 	std::vector<int> data;
+	
 	/*
 	data = FCFS(proc_map, procs, t_cs);
-	print_stats("FCFS", data, out);
+	char alg1[] = {'F', 'C', 'F', 'S'};
+	print_stats(alg1, data, out);
+
 	data = SJF(proc_map, procs, t_cs);
-	print_stats("SJF", data, out);
+	char alg2[] = {'S', 'J', 'F'};
+	print_stats(alg2, data, out);
+
 	data = SRT(proc_map, procs, t_cs);
-	print_stats("SRT", data, out);
+	char alg3[] = {'S', 'R', 'T'};
+	print_stats(alg3, data, out);
 	*/
 	data = RR(proc_map, procs, t_cs, t_slice, rr_add);
-	print_stats("RR", data, out);
+	char alg4[] = {'R', 'R'};
+	print_stats(alg4, data, out);
 }	
 
 int main(int argc, char* argv[])
@@ -433,11 +446,15 @@ int main(int argc, char* argv[])
 	int alpha = atoi(argv[6]);
 	int t_slice = atoi(argv[7]);
 	out = fopen("simout.txt", "w");
+	if(out == NULL)
+	{
+		std::cerr << "ERROR: could not open file\n";
+		return EXIT_FAILURE;
+	}
 	std::string rr_add = "END";
 	if(argc == 9 && strcmp(argv[8], "BEGINNING") == 0)
 		rr_add = "BEGINNING";	
 	start_sim(n, seed, lambda, upper, t_cs, alpha, t_slice, out, rr_add);
-
-
+	fclose(out);
 	return EXIT_SUCCESS;
 }
